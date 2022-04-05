@@ -1,0 +1,5 @@
+/.ipynb_checkpoints
+/food-dataset
+/mnist
+/vehicle-detection
+*.csv
