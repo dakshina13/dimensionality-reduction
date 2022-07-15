@@ -2,4 +2,4 @@
 /food-dataset
 /mnist
 /vehicle-detection
-*.csv
+/loan-defaulter/dataset/
