@@ -1,3 +1,4 @@
+from time import time
 import streamlit as st
 
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
@@ -19,7 +20,7 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 
 st.title("Dimensionality Reduction")
 st.write("""
-## Try different alogirtms and their selection methods 
+## Try different algorithms and their selection methods 
 """)
 
 dataset_name = st.sidebar.selectbox(
@@ -114,6 +115,7 @@ def encode_label(train):
 
 def select_features(X, y, forwardValue):
     feature_names = tuple(X.columns)
+    start_time = time()
     sfs1 = SFS(  # knn(n_neighbors=3),
         # rfc(n_jobs=8),
         LGR(max_iter=10000),
@@ -127,6 +129,9 @@ def select_features(X, y, forwardValue):
     sfs1 = sfs1.fit(X, y, custom_feature_names=feature_names)
     st.write("Selected features")
     st.write(sfs1.k_feature_names_)
+    features_list=np.array(sfs1.k_feature_names_)
+    st.write("Selected features shape ",features_list.shape)
+    st.write("Time taken ",(time() - start_time)," ms")
     graphName = ""
     if forwardValue == True:
         graphName = "Sequential Forward Selection"
