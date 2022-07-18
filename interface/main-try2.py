@@ -25,11 +25,14 @@ st.write("""
 
 dataset_name = st.sidebar.selectbox(
     "Select Dataset", ("Breast Cancer", "Vehicle loan", "Loan dataset"))
-st.write("Dataset chosen :",dataset_name)
+st.write("Dataset chosen :", dataset_name)
 
 direction_name = st.sidebar.selectbox(
-    "Select classifier", ("Forward selection", "Backward selection"))
-st.write("Algorithm chosen",direction_name)
+    "Select algorithm", ("Forward selection", "Backward selection"))
+st.write("Algorithm chosen", direction_name)
+
+float_selected = st.sidebar.selectbox(
+    "Floating", ("True", "False"))
 
 target_column_name = st.sidebar.text_input('Target')
 
@@ -47,6 +50,7 @@ drop_column_array = np.array(drop_column_array)
 
 if target_column_name == "":
     st.warning("Enter the target")
+
 
 def get_dataset(dataset_name):
     if dataset_name == "Vehicle loan":
@@ -68,9 +72,18 @@ def get_direction(direction_name):
         return False
 
 
+def get_float_value(float_value):
+    if float_value == "True":
+        return True
+    else:
+        return False
+
+
 directionValue = get_direction(direction_name)
 
 raw_data = get_dataset(dataset_name)
+
+float_value = get_float_value(float_selected)
 
 #st.write("Initial shape of dataset", raw_data.shape)
 
@@ -115,7 +128,7 @@ def encode_label(train):
     return train
 
 
-def select_features(X, y, forwardValue):
+def select_features(X, y, forwardValue, floatValue):
     feature_names = tuple(X.columns)
     start_time = time()
     sfs1 = SFS(  # knn(n_neighbors=3),
@@ -123,7 +136,7 @@ def select_features(X, y, forwardValue):
         LGR(max_iter=10000),
         k_features='best',
         forward=forwardValue,
-        floating=False,
+        floating=floatValue,
         verbose=2,
         # scoring = 'neg_mean_squared_error',  # sklearn regressors
         scoring='accuracy',  # sklearn classifiers
@@ -131,32 +144,37 @@ def select_features(X, y, forwardValue):
     sfs1 = sfs1.fit(X, y, custom_feature_names=feature_names)
     st.write("Selected features")
     st.write(sfs1.k_feature_names_)
-    features_list=np.array(sfs1.k_feature_names_)
-    st.write("Selected features shape ",features_list.shape)
-    st.write("Time taken ",(time() - start_time)," ms")
+    features_list = np.array(sfs1.k_feature_names_)
+    st.write("Selected features shape ", features_list.shape)
+    st.write("Time taken ", (time() - start_time), " seconds")
     graphName = ""
-    if forwardValue == True:
+    if forwardValue == True and floatValue == True:
+        graphName = "Sequential Forward Floating Selection"
+    elif forwardValue == False and floatValue == True:
+        graphName = "Sequential Backward Floating selection"
+    elif forwardValue == True and floatValue == False:
         graphName = "Sequential Forward Selection"
     else:
         graphName = "Sequential Backward selection"
+    st.write("Accuracy ",sfs1.k_score_)
     plot_graph(sfs1, graphName)
 
 
-def dataset_ready(X, y, forwardValue):
+def dataset_ready(X, y, forwardValue, floatValue):
     st.write("Ready to select features")
     st.write("Shape of dataset before feature selection", X.shape)
     st.write("Number of classes in output or target", len(np.unique(y)))
-    select_features(X, y, forwardValue)
+    select_features(X, y, forwardValue, floatValue)
     # plot_graph()
 
-buttonPressed=st.sidebar.button("Run")
+
+buttonPressed = st.sidebar.button("Run")
 
 if buttonPressed:
-    buttonPressed=False
-    if target_column_name!="":       
+    buttonPressed = False
+    if target_column_name != "":
         encoded_data = encode_label(raw_data)
         target = encoded_data[target_column_name]
         encoded_data = encoded_data.drop(target_column_name, axis=1)
         encoded_data = drop_selected_columns(encoded_data, drop_column_array)
-        dataset_ready(encoded_data, target, directionValue)
-    
+        dataset_ready(encoded_data, target, directionValue, float_value)
